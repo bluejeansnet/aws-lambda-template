@@ -1,0 +1,107 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.bluejeans.aws.lambda</groupId>
+	<artifactId>aws-lambda-parent</artifactId>
+	<packaging>pom</packaging>
+	<version>0.0.1</version>
+	<properties>
+		<lambada.version>0.0.6</lambada.version>
+		<lambada.runtime.version>0.0.7</lambada.runtime.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<deployment.bucket>aws-lambda-template-project</deployment.bucket>
+		<deployment.package>com.bluejeans.aws</deployment.package>
+		<!-- Region to deploy -->
+		<deployment.region>us-west-2</deployment.region>
+		<!-- Stage to deploy -->
+		<deployment.stage>production</deployment.stage>
+		<!-- Maximum execution time for lambda -->
+		<deployment.maximumExecutionTime>20</deployment.maximumExecutionTime>
+		<!-- Maximum allowed memory usage for lambda -->
+		<deployment.lambdaMemorySize>1024</deployment.lambdaMemorySize>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>com.bluejeans.aws.lambda</groupId>
+			<artifactId>aws-lambda-runtime</artifactId>
+			<version>0.0.1</version>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>com.bluejeans.lambadaframework</groupId>
+				<artifactId>lambada-maven-plugin</artifactId>
+				<version>${lambada.runtime.version}</version>
+				<configuration>
+					<packageName>${deployment.package}</packageName>
+					<regionToDeploy>${deployment.region}</regionToDeploy>
+					<stageToDeploy>${deployment.stage}</stageToDeploy>
+					<lambdaMaximumExecutionTime>${deployment.maximumExecutionTime}</lambdaMaximumExecutionTime>
+					<lambdaMemorySize>${deployment.lambdaMemorySize}</lambdaMemorySize>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>com.bluejeans.aws.lambda</groupId>
+						<artifactId>aws-lambda-runtime</artifactId>
+						<version>0.0.1</version>
+					</dependency>
+				</dependencies>
+				<executions>
+					<execution>
+						<goals>
+							<goal>prepare</goal>
+							<goal>deploy</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- Maven Shade plugin packages the project to a fat JAR with all required 
+				dependencies. With minimum dependencies it should create a 5 MB jar file. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>2.4.3</version>
+				<configuration>
+					<!-- It is important to NOT to activate minimizeJar option -->
+					<minimizeJar>false</minimizeJar>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.2</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+		</plugins>
+		<extensions>
+			<extension>
+				<groupId>org.lambadaframework</groupId>
+				<artifactId>wagon</artifactId>
+				<version>${lambada.version}</version>
+			</extension>
+		</extensions>
+	</build>
+	<distributionManagement>
+		<repository>
+			<id>aws-releases</id>
+			<name>AWS Release Repository</name>
+			<url>s3://${deployment.bucket}/releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>aws-snapshots</id>
+			<name>AWS Snapshot Repository</name>
+			<url>s3://${deployment.bucket}/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+</project>
